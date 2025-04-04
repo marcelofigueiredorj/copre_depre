@@ -1,0 +1,196 @@
+<!-- copre_depre/templates/composition.html -->
+{% extends "base.html" %}
+{% load static %}
+{% load form_tags %}
+
+{% block title %}Nova Composição{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">{% if form.instance.id %}Editar Composição{% else %}Nova Composição{% endif %}</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Cabeçalho -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <img src="{% static 'images/emop_branco_g1.png' %}" alt="Logo" class="img-fluid mb-3" style="max-width: 150px;">
+                <h3 class="card-title">CORDENADORIA DE PREÇOS - COPRE</h3>
+                <p class="card-text">DEPARTAMENTO DE APROPRIAÇÃO DE PREÇOS - DEPRE</p>
+            </div>
+        </div>
+
+        <!-- Formulário Principal -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label for="{{ form.solicitante.id_for_label }}" class="form-label">Solicitante</label>
+                {{ form.solicitante|add_class:"form-control" }}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.autor.id_for_label }}" class="form-label">Autor</label>
+                {{ form.autor|add_class:"form-control" }}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.unidade.id_for_label }}" class="form-label">Unidade</label>
+                {{ form.unidade|add_class:"form-control" }}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.data.id_for_label }}" class="form-label">Data</label>
+                {{ form.data|add_class:"form-control" }}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.codigo.id_for_label }}" class="form-label">Código</label>
+                {{ form.codigo|add_class:"form-control" }}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.numero.id_for_label }}" class="form-label">Número</label>
+                {{ form.numero|add_class:"form-control" }}
+            </div>
+            <div class="col-12">
+                <label for="{{ form.descricao.id_for_label }}" class="form-label">Descrição</label>
+                {{ form.descricao|add_class:"form-control" }}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.obra.id_for_label }}" class="form-label">Obra</label>
+                {{ form.obra|add_class:"form-control" }}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.io.id_for_label }}" class="form-label">IO</label>
+                {{ form.io|add_class:"form-control" }}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.valor_total.id_for_label }}" class="form-label">Valor Total</label>
+                {{ form.valor_total|add_class:"form-control" }}
+            </div>
+        </div>
+
+        <!-- Insumos -->
+        <h3 class="mb-3">Insumos</h3>
+        {{ formset.management_form }}
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered" id="insumos-table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Insumo</th>
+                        <th>Código</th>
+                        <th>UN</th>
+                        <th>Quantidade</th>
+                        <th>Data Custo</th>
+                        <th>Valor</th>
+                        <th>Excluir</th>
+                    </tr>
+                </thead>
+                <tbody id="insumos-tbody">
+                    {% for insumo_form in formset %}
+                    <tr>
+                        <td>{{ insumo_form.insumo|add_class:"form-select" }}</td>
+                        <td>{{ insumo_form.codigo|add_class:"form-control" }}</td>
+                        <td>{{ insumo_form.un|add_class:"form-control" }}</td>
+                        <td>{{ insumo_form.quantidade|add_class:"form-control" }}</td>
+                        <td>{{ insumo_form.data_custo|add_class:"form-control" }}</td>
+                        <td>{{ insumo_form.valor|add_class:"form-control" }}</td>
+                        <td>{{ insumo_form.DELETE|add_class:"form-check-input" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-end mt-3 gap-3">
+            <button type="button" id="add-insumo-btn" class="btn btn-success">
+                <i class="bi bi-plus-lg"></i> Adicionar Insumo
+            </button>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Salvar e Exportar
+            </button>
+            <a href="{% url 'main' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Dados dos insumos passados do backend
+    const insumos = {{ insumos_json|safe }};
+
+    // Função para preencher os campos com base no insumo selecionado
+    function autoFillInsumo(selectElement) {
+        const row = selectElement.closest('tr');
+        const insumoId = selectElement.value;
+        const insumoData = insumos[insumoId] || {};
+
+        row.querySelector('input[name$="-codigo"]').value = insumoData.codigo || '';
+        row.querySelector('input[name$="-un"]').value = insumoData.un || '';
+        row.querySelector('input[name$="-data_custo"]').value = insumoData.data_custo || '';
+        row.querySelector('input[name$="-valor"]').value = insumoData.valor || '0.00';
+
+        updateValorTotal();
+    }
+
+    // Função para calcular o valor total dinamicamente
+    function updateValorTotal() {
+        let total = 0;
+        document.querySelectorAll('#insumos-tbody tr').forEach(row => {
+            const quantidade = parseFloat(row.querySelector('input[name$="-quantidade"]').value) || 0;
+            const valor = parseFloat(row.querySelector('input[name$="-valor"]').value) || 0;
+            total += quantidade * valor;
+        });
+        document.querySelector('#id_valor_total').value = total.toFixed(2);
+    }
+
+    // Função para adicionar uma nova linha de insumo
+    function addInsumoRow() {
+        const tbody = document.getElementById('insumos-tbody');
+        const rowCount = tbody.querySelectorAll('tr').length;
+        const templateRow = tbody.querySelector('tr:first-child').cloneNode(true);
+
+        // Limpa os valores da nova linha
+        templateRow.querySelectorAll('input').forEach(input => {
+            if (input.type === 'checkbox') input.checked = false;
+            else input.value = '';
+        });
+        templateRow.querySelector('select[name$="-insumo"]').selectedIndex = 0;
+
+        // Ajusta os nomes e IDs dos campos para o novo índice
+        templateRow.querySelectorAll('[name]').forEach(element => {
+            const oldName = element.name;
+            const newName = oldName.replace(/-\d+-/, `-${rowCount}-`);
+            element.name = newName;
+            if (element.id) element.id = 'id_' + newName;
+        });
+
+        tbody.appendChild(templateRow);
+
+        // Atualiza TOTAL_FORMS
+        const totalForms = document.querySelector('#id_composicaoinsumo_set-TOTAL_FORMS');
+        totalForms.value = rowCount + 1;
+
+        updateValorTotal();
+    }
+
+    // Delegação de eventos para selects e inputs
+    document.getElementById('insumos-tbody').addEventListener('change', function(event) {
+        if (event.target.matches('select[name$="-insumo"]')) {
+            autoFillInsumo(event.target);
+        }
+    });
+
+    document.getElementById('insumos-tbody').addEventListener('input', function(event) {
+        if (event.target.matches('input[name$="-quantidade"], input[name$="-valor"]')) {
+            updateValorTotal();
+        }
+    });
+
+    // Evento para adicionar insumo
+    document.getElementById('add-insumo-btn').addEventListener('click', addInsumoRow);
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('select[name$="-insumo"]').forEach(select => {
+            if (select.value) autoFillInsumo(select);
+        });
+        updateValorTotal();
+    });
+</script>
+{% endblock %}

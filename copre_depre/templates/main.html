@@ -1,0 +1,107 @@
+<!-- copre_depre/templates/main.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Página Principal</h1>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <!-- Nova Composição -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <i class="bi bi-plus-circle main-icon mb-3"></i>
+                    <h5 class="card-title">Nova Composição</h5>
+                    <a href="{% url 'composition' %}" class="btn btn-primary mt-auto">Acessar</a>
+                </div>
+            </div>
+        </div>
+        <!-- Composições Cadastradas -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <i class="bi bi-list-ul main-icon mb-3"></i>
+                    <h5 class="card-title">Composições Cadastradas</h5>
+                    <a href="{% url 'composicoes_cadastradas' %}" class="btn btn-info mt-auto">Acessar</a>
+                </div>
+            </div>
+        </div>
+        <!-- Importar Insumos -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <i class="bi bi-upload main-icon mb-3"></i>
+                    <h5 class="card-title">Importar Insumos</h5>
+                    <a href="{% url 'importar_insumos' %}" class="btn btn-success mt-auto">Acessar</a>
+                </div>
+            </div>
+        </div>
+        <!-- Insumos -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <i class="bi bi-box main-icon mb-3"></i>
+                    <h5 class="card-title">Insumos</h5>
+                    <a href="{% url 'insumos' %}" class="btn btn-secondary mt-auto">Acessar</a>
+                </div>
+            </div>
+        </div>
+        <!-- Pesquisar Insumos -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <i class="bi bi-search main-icon mb-3"></i>
+                    <h5 class="card-title">Pesquisar Insumos</h5>
+                    <a href="{% url 'pesquisar_insumos' %}" class="btn btn-warning mt-auto">Acessar</a>
+                </div>
+            </div>
+        </div>
+        <!-- Pesquisar Composições -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <i class="bi bi-search main-icon mb-3"></i>
+                    <h5 class="card-title">Pesquisar Composições</h5>
+                    <a href="{% url 'pesquisar_composicoes' %}" class="btn btn-warning mt-auto">Acessar</a>
+                </div>
+            </div>
+        </div>
+        <!-- Selecionar Composições -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <i class="bi bi-check-circle main-icon mb-3"></i>
+                    <h5 class="card-title">Selecionar Composições</h5>
+                    <a href="{% url 'selecionar_composicoes' %}" class="btn btn-primary mt-auto">Acessar</a>
+                </div>
+            </div>
+        </div>
+        <!-- Admin -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <i class="bi bi-gear main-icon mb-3"></i>
+                    <h5 class="card-title">Admin</h5>
+                    <a href="/admin/" class="btn btn-warning mt-auto">Acessar</a>
+                </div>
+            </div>
+        </div>
+        <!-- Sair -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <i class="bi bi-box-arrow-right main-icon mb-3"></i>
+                    <h5 class="card-title">Sair</h5>
+                    <form method="post" action="{% url 'logout' %}" style="display: inline;" class="mt-auto">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Sair</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-4 text-center">
+        <a href="{% url 'home' %}" class="btn btn-secondary btn-lg">
+            <i class="bi bi-arrow-left"></i> Voltar à Home
+        </a>
+    </div>
+</div>
+{% endblock %}

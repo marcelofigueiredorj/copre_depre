@@ -1,0 +1,57 @@
+<!-- copre_depre/templates/composicoes_cadastradas.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Composições Cadastradas</h1>
+    <!-- Tabela de composições -->
+    {% if composicoes %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Código</th>
+                    <th scope="col">Descrição</th>
+                    <th scope="col">Unidade</th>
+                    <th scope="col">Valor Total (R$)</th>
+                    <th scope="col">Obra</th>
+                    <th scope="col">Data</th>
+                    <th scope="col">Solicitante</th>
+                    <th scope="col">Autor</th>
+                    <th scope="col">Número</th>
+                    <th scope="col">IO</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for composicao in composicoes %}
+                <tr>
+                    <td>{{ composicao.codigo|default:"Não informado" }}</td>
+                    <td>{{ composicao.descricao|default:"Não informado" }}</td>
+                    <td>{{ composicao.unidade|default:"Não informado" }}</td>
+                    <td>{{ composicao.valor_total|floatformat:2|default:"0.00" }}</td>
+                    <td>{{ composicao.obra|default:"Não informado" }}</td>
+                    <td>{{ composicao.data|default:"Não informado" }}</td>
+                    <td>{{ composicao.solicitante|default:"Não informado" }}</td>
+                    <td>{{ composicao.autor|default:"Não informado" }}</td>
+                    <td>{{ composicao.numero|default:"Não informado" }}</td>
+                    <td>{{ composicao.io|default:"Não informado" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center" role="alert">
+        Nenhuma composição cadastrada.
+    </div>
+    {% endif %}
+    <!-- Botões -->
+    <div class="mt-4 d-flex justify-content-center gap-3">
+        <a href="{% url 'composition' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle"></i> Nova Composição
+        </a>
+        <a href="{% url 'main' %}" class="btn btn-secondary btn-lg">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+{% endblock %}

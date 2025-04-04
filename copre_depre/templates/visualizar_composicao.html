@@ -1,0 +1,58 @@
+<!-- copre_depre/templates/visualizar_composicao.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Visualizar Composição</h1>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Código: {{ composicao.codigo|default:"Não informado" }}</h5>
+            <p class="card-text"><strong>Descrição:</strong> {{ composicao.descricao|default:"Não informado" }}</p>
+            <p class="card-text"><strong>Unidade:</strong> {{ composicao.unidade|default:"Não informado" }}</p>
+            <p class="card-text"><strong>Valor Total:</strong> R$ {{ composicao.valor_total|floatformat:2|default:"0.00" }}</p>
+            <p class="card-text"><strong>Obra:</strong> {{ composicao.obra|default:"Não informado" }}</p>
+            <p class="card-text"><strong>Data:</strong> {{ composicao.data|default:"Não informado" }}</p>
+            <p class="card-text"><strong>Solicitante:</strong> {{ composicao.solicitante|default:"Não informado" }}</p>
+            <p class="card-text"><strong>Autor:</strong> {{ composicao.autor|default:"Não informado" }}</p>
+            <p class="card-text"><strong>Número:</strong> {{ composicao.numero|default:"Não informado" }}</p>
+            <p class="card-text"><strong>IO:</strong> {{ composicao.io|default:"Não informado" }}</p>
+            <!-- Lista de insumos associados -->
+            {% with composicao_insumos=composicao.composicaoinsumo_set.all %}
+            {% if composicao_insumos %}
+            <h6 class="mt-4">Insumos Associados:</h6>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Insumo</th>
+                        <th>Quantidade</th>
+                        <th>Unidade</th>
+                        <th>Valor Unitário</th>
+                        <th>Valor Total</th>
+                        <th>Data do Custo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ci in composicao_insumos %}
+                    <tr>
+                        <td>{{ ci.insumo.codigo|default:"Não informado" }}</td>
+                        <td>{{ ci.insumo.insumo|default:"Não informado" }}</td>
+                        <td>{{ ci.quantidade|floatformat:2|default:"0.00" }}</td>
+                        <td>{{ ci.un|default:ci.insumo.unidade|default:"Não informado" }}</td>
+                        <td>R$ {{ ci.insumo.valor|floatformat:2|default:"0.00" }}</td>
+                        <td>R$ {{ ci.valor|floatformat:2|default:"0.00" }}</td>
+                        <td>{{ ci.data_custo|date:"d/m/Y"|default:"Não informado" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">Nenhum insumo associado a esta composição.</p>
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    <div class="mt-4">
+        <a href="{% url 'selecionar_composicoes' %}" class="btn btn-secondary">Voltar</a>
+    </div>
+</div>
+{% endblock %}

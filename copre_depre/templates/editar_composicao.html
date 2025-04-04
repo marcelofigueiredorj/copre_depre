@@ -1,0 +1,88 @@
+<!-- copre_depre/templates/editar_composicao.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Editar Composição</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="solicitante" class="form-label">Solicitante</label>
+            <input type="text" name="solicitante" id="solicitante" class="form-control" value="{{ composicao.solicitante|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="autor" class="form-label">Autor</label>
+            <input type="text" name="autor" id="autor" class="form-control" value="{{ composicao.autor|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="unidade" class="form-label">Unidade</label>
+            <input type="text" name="unidade" id="unidade" class="form-control" value="{{ composicao.unidade|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="data" class="form-label">Data (dd/mm/aaaa)</label>
+            <input type="text" name="data" id="data" class="form-control" value="{{ composicao.data|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="codigo" class="form-label">Código</label>
+            <input type="text" name="codigo" id="codigo" class="form-control" value="{{ composicao.codigo|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="numero" class="form-label">Número</label>
+            <input type="text" name="numero" id="numero" class="form-control" value="{{ composicao.numero|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="obra" class="form-label">Obra</label>
+            <input type="text" name="obra" id="obra" class="form-control" value="{{ composicao.obra|default:'' }}">
+        </div>
+        <div class="mb-3">
+            <label for="descricao" class="form-label">Descrição</label>
+            <textarea name="descricao" id="descricao" class="form-control" rows="3" required>{{ composicao.descricao|default:'' }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="io" class="form-label">IO</label>
+            <input type="text" name="io" id="io" class="form-control" value="{{ composicao.io|default:'' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Valor Total (calculado automaticamente)</label>
+            <input type="text" class="form-control" value="R$ {{ composicao.valor_total|floatformat:2|default:'0.00' }}" readonly>
+        </div>
+        <!-- Lista de insumos associados (somente visualização) -->
+        {% with composicao_insumos=composicao.composicaoinsumo_set.all %}
+        {% if composicao_insumos %}
+        <h6 class="mt-4">Insumos Associados (não editáveis aqui):</h6>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Insumo</th>
+                    <th>Quantidade</th>
+                    <th>Unidade</th>
+                    <th>Valor Unitário</th>
+                    <th>Valor Total</th>
+                    <th>Data do Custo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ci in composicao_insumos %}
+                <tr>
+                    <td>{{ ci.insumo.codigo|default:"Não informado" }}</td>
+                    <td>{{ ci.insumo.insumo|default:"Não informado" }}</td>
+                    <td>{{ ci.quantidade|floatformat:2|default:"0.00" }}</td>
+                    <td>{{ ci.un|default:ci.insumo.unidade|default:"Não informado" }}</td>
+                    <td>R$ {{ ci.insumo.valor|floatformat:2|default:"0.00" }}</td>
+                    <td>R$ {{ ci.valor|floatformat:2|default:"0.00" }}</td>
+                    <td>{{ ci.data_custo|date:"d/m/Y"|default:"Não informado" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">Nenhum insumo associado a esta composição.</p>
+        {% endif %}
+        {% endwith %}
+        <button type="submit" class="btn btn-primary">Salvar</button>
+    </form>
+    <div class="mt-4">
+        <a href="{% url 'selecionar_composicoes' %}" class="btn btn-secondary">Voltar</a>
+    </div>
+</div>
+{% endblock %}

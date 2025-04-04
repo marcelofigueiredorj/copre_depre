@@ -1,0 +1,50 @@
+<!-- copre_depre/templates/insumos.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Insumos Cadastrados</h1>
+    <!-- Tabela de insumos -->
+    {% if insumos %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Código</th>
+                    <th scope="col">Insumo</th>
+                    <th scope="col">Unidade</th>
+                    <th scope="col">Valor (R$)</th>
+                    <th scope="col">Data do Custo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for insumo in insumos %}
+                <tr>
+                    <td>{{ insumo.codigo|default:"Não informado" }}</td>
+                    <td>{{ insumo.insumo|default:"Não informado" }}</td>
+                    <td>{{ insumo.unidade|default:"Não informado" }}</td>
+                    <td>{{ insumo.valor|floatformat:2|default:"0.00" }}</td>
+                    <td>{{ insumo.data_custo|date:"d/m/Y"|default:"Não informado" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center" role="alert">
+        Nenhum insumo cadastrado.
+    </div>
+    {% endif %}
+    <!-- Botões -->
+    <div class="mt-4 d-flex justify-content-center gap-3">
+        <a href="{% url 'importar_insumos' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-upload"></i> Importar Insumos
+        </a>
+        <a href="{% url 'pesquisar_insumos' %}" class="btn btn-info btn-lg">
+            <i class="bi bi-search"></i> Pesquisar Insumos
+        </a>
+        <a href="{% url 'main' %}" class="btn btn-secondary btn-lg">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+{% endblock %}

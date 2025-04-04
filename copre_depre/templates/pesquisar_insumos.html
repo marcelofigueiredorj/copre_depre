@@ -1,0 +1,45 @@
+<!-- copre_depre/templates/pesquisar_insumos.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Pesquisar Insumos</h1>
+    <!-- Formulário de busca -->
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Digite o nome do insumo..." value="{{ query }}">
+            <button type="submit" class="btn btn-primary">Pesquisar</button>
+        </div>
+    </form>
+    <!-- Resultados -->
+    {% if insumos %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Insumo</th>
+                <th>Unidade</th>
+                <th>Valor</th>
+                <th>Data do Custo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for insumo in insumos %}
+            <tr>
+                <td>{{ insumo.codigo }}</td>
+                <td>{{ insumo.insumo }}</td>
+                <td>{{ insumo.unidade }}</td>
+                <td>{{ insumo.valor }}</td>
+                <td>{{ insumo.data_custo }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-center">Nenhum insumo encontrado.</p>
+    {% endif %}
+    <!-- Botão Voltar -->
+    <div class="mt-4">
+        <a href="{% url 'main' %}" class="btn btn-secondary">Voltar</a>
+    </div>
+</div>
+{% endblock %}

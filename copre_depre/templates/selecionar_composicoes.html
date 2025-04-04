@@ -1,0 +1,56 @@
+<!-- copre_depre/templates/selecionar_composicoes.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Selecionar Composições</h1>
+    <!-- Formulário de busca (opcional, se quiser manter a funcionalidade de busca) -->
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Digite o nome ou código da composição..." value="{{ query }}">
+            <button type="submit" class="btn btn-primary">Pesquisar</button>
+        </div>
+    </form>
+    <!-- Tabela de composições -->
+    {% if composicoes %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Unidade</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for composicao in composicoes %}
+            <tr>
+                <td>{{ composicao.codigo }}</td>
+                <td>{{ composicao.descricao }}</td>
+                <td>{{ composicao.unidade }}</td>
+                <td>
+                    <a href="{% url 'visualizar_composicao' composicao.id %}" class="btn btn-sm btn-info" title="Visualizar">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{% url 'editar_composicao' composicao.id %}" class="btn btn-sm btn-warning" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="post" action="{% url 'excluir_composicao' composicao.id %}" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir esta composição?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-center">Nenhuma composição encontrada.</p>
+    {% endif %}
+    <!-- Botão Voltar -->
+    <div class="mt-4">
+        <a href="{% url 'main' %}" class="btn btn-secondary">Voltar</a>
+    </div>
+</div>
+{% endblock %}
