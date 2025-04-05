@@ -27,3 +27,21 @@ class Command(BaseCommand):
         else:
             User.objects.create_superuser(username=username, email=email, password=password)
             self.stdout.write(f"Superusuário '{username}' criado com sucesso.")
+
+    def handle(self, *args, **options):
+        print ("DEBUG VARIÁVEIS:")
+        print ("USERNAME:", os.environ.get ("DJANGO_SUPERUSER_USERNAME"))
+        print ("EMAIL:", os.environ.get ("DJANGO_SUPERUSER_EMAIL"))
+        print ("PASSWORD:", os.environ.get ("DJANGO_SUPERUSER_PASSWORD"))
+
+        if os.environ.get ("CREATE_SUPERUSER", "").lower () != "true":
+            self.stdout.write ("CREATE_SUPERUSER não é 'true'. Pulando criação do superusuário.")
+            return
+
+        username = os.environ.get ("DJANGO_SUPERUSER_USERNAME")
+        email = os.environ.get ("DJANGO_SUPERUSER_EMAIL")
+        password = os.environ.get ("DJANGO_SUPERUSER_PASSWORD")
+
+        if not username or not email or not password:
+            self.stderr.write ("Variáveis de ambiente incompletas. Abortando.")
+            return
