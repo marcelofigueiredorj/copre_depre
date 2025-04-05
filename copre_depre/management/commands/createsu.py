@@ -1,16 +1,18 @@
+# copre_depre/management/commands/createsu.py
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 import os
 
 class Command(BaseCommand):
-    help = "Cria um superusuário a partir de variáveis de ambiente."
+    help = "Cria um superusuário automaticamente a partir de variáveis de ambiente"
 
     def handle(self, *args, **options):
         if os.environ.get("CREATE_SUPERUSER", "").lower() != "true":
-            self.stdout.write("CREATE_SUPERUSER não é 'true'. Pulando criação.")
+            self.stdout.write("Variável CREATE_SUPERUSER não é 'true'. Pulando criação do superusuário.")
             return
 
-        username = os.environ.get("marcelo")
+        username = os.environ.get("admin")
         email = os.environ.get("marcelotechsg@gmail.com")
         password = os.environ.get("filipe98")
 
