@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'copre_depre',
+    'copre_depre.apps.CopreDepreConfig'
 ]
 
 MIDDLEWARE = [
