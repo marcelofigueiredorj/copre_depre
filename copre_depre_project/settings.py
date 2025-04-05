@@ -65,14 +65,25 @@ WSGI_APPLICATION = 'copre_depre_project.wsgi.application'
 
 conn = psycopg2.connect (dbname='depre_db', host='localhost', port='5432', user='postgres', password='admin123')
 
+#DATABASES = {
+#   'default': {
+#       'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#       'NAME': 'depre_db',
+#       'USER': 'postgres',
+#       'PASSWORD': 'admin123',
+#       'PORT': '5432',
+ #      'HOST': 'localhost',
+#   }
+#}
+
 DATABASES = {
    'default': {
        'ENGINE': 'django.db.backends.postgresql_psycopg2',
        'NAME': 'depre_db',
-       'USER': 'postgres',
-       'PASSWORD': 'admin123',
+       'USER': 'admin',
+       'PASSWORD': 'nhJdFSuqUd8NIPpTMXvrQuupvXIPE8lb',
        'PORT': '5432',
-       'HOST': 'localhost',
+       'HOST': 'dpg-cvoo7gruibrs73bv1ing-a.oregon-postgres.render.com',
    }
 }
 
