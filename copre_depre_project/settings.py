@@ -63,7 +63,7 @@ WSGI_APPLICATION = 'copre_depre_project.wsgi.application'
  #  }
 #}
 
-conn = psycopg2.connect (dbname='depre_db', host='localhost', port='5432', user='postgres', password='admin123')
+#conn = psycopg2.connect (dbname='depre_db', host='localhost', port='5432', user='postgres', password='admin123')
 
 #DATABASES = {
 #   'default': {
