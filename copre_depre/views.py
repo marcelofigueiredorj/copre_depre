@@ -158,93 +158,100 @@ def excluir_composicao_view(request, id):
 @login_required
 def composition_form_view(request, composicao_id=None):
     if not request.user.is_authenticated:
-        return redirect ('login')
+        return redirect('login')
 
-    logger.debug ("Iniciando composition_form_view")
+    logger.debug("Iniciando composition_form_view")
 
     if composicao_id:
-        composicao = Composicao.objects.get (id=composicao_id)
-        form = ComposicaoForm (request.POST or None, instance=composicao)
-        formset = ComposicaoInsumoFormSet (request.POST or None, instance=composicao)
+        composicao = Composicao.objects.get(id=composicao_id)
+        form = ComposicaoForm(request.POST or None, instance=composicao)
+        formset = ComposicaoInsumoFormSet(request.POST or None, instance=composicao)
     else:
-        form = ComposicaoForm (request.POST or None)
-        formset = ComposicaoInsumoFormSet (request.POST or None)
+        form = ComposicaoForm(request.POST or None)
+        formset = ComposicaoInsumoFormSet(request.POST or None)
 
     insumos_data = {
-        str (insumo.id): {
+        str(insumo.id): {
             'codigo': insumo.codigo,
             'un': insumo.unidade,
-            'data_custo': insumo.data_custo.strftime ('%d/%m/%Y') if insumo.data_custo else '',
-            'valor': str (insumo.valor)
-        } for insumo in Insumo.objects.all ()
+            'data_custo': insumo.data_custo.strftime('%d/%m/%Y') if insumo.data_custo else '',
+            'valor': str(insumo.valor)
+        } for insumo in Insumo.objects.all()
     }
 
     if request.method == "POST":
-        logger.debug ("Requisição POST recebida")
-        logger.debug (f"Dados do formulário: {request.POST}")
+        logger.debug("Requisição POST recebida")
+        logger.debug(f"Dados do formulário: {request.POST}")
 
-        if form.is_valid () and formset.is_valid ():
+        if form.is_valid() and formset.is_valid():
             try:
-                with transaction.atomic ():
-                    composicao = form.save ()
-                    logger.debug (f"Composição salva: {composicao.id}")
+                with transaction.atomic():
+                    composicao = form.save()
+                    logger.debug(f"Composição salva: {composicao.id}")
 
                     formset.instance = composicao
-                    formset.save ()
+                    formset.save()
 
-                    insumos = ComposicaoInsumo.objects.filter (composicao=composicao)
-                    logger.debug (f"Insumos encontrados: {list (insumos.values ())}")
+                    insumos = ComposicaoInsumo.objects.filter(composicao=composicao)
+                    logger.debug(f"Insumos encontrados: {list(insumos.values())}")
 
-                    total = sum (
-                        Decimal (str (ci.quantidade)) * Decimal (str (ci.valor))
+                    total = sum(
+                        Decimal(str(ci.quantidade)) * Decimal(str(ci.valor))
                         for ci in insumos
                         if ci.quantidade is not None and ci.valor is not None
                     )
                     composicao.valor_total = total
-                    composicao.save (update_fields=['valor_total'])  # Atualiza apenas o campo valor_total
-                    logger.debug (f"Valor total atualizado: {total}")
+                    composicao.save(update_fields=['valor_total'])
+                    logger.debug(f"Valor total atualizado: {total}")
 
                     composicao_data = {
-                        'solicitante': composicao.solicitante,
-                        'autor': composicao.autor,
-                        'unidade': composicao.unidade,
-                        'data': composicao.data,
-                        'codigo': composicao.codigo,
-                        'numero': composicao.numero,
-                        'obra': composicao.obra,
-                        'descricao': composicao.descricao,
-                        'io': composicao.io,
-                        'valor_total': f"{composicao.valor_total:.2f}",  # Formata com 2 casas decimais
+                        'solicitante': composicao.solicitante or '',
+                        'autor': composicao.autor or '',
+                        'unidade': composicao.unidade or '',
+                        'data': composicao.data.strftime('%d/%m/%Y') if composicao.data else '',
+                        'codigo': composicao.codigo or '',
+                        'numero': composicao.numero or '',
+                        'obra': composicao.obra or '',
+                        'descricao': composicao.descricao or '',
+                        'io': composicao.io or '',
+                        'valor_total': f"{composicao.valor_total:.2f}",
                         'insumos': [
                             {
                                 'insumo': ci.insumo.insumo if ci.insumo else '',
                                 'codigo': ci.codigo or '',
                                 'un': ci.un or '',
-                                'quantidade': str (ci.quantidade) if ci.quantidade is not None else '0',
-                                'data_custo': ci.data_custo.strftime ('%d/%m/%Y') if ci.data_custo else '',
-                                'valor': str (ci.valor) if ci.valor is not None else '0.00'
+                                'quantidade': str(ci.quantidade) if ci.quantidade is not None else '0',
+                                'data_custo': ci.data_custo.strftime('%d/%m/%Y') if ci.data_custo else '',
+                                'valor': str(ci.valor) if ci.valor is not None else '0.00'
                             } for ci in insumos
                         ]
                     }
-                    logger.debug (f"Dados para PDF: {composicao_data}")
+                    logger.debug(f"Dados para PDF: {composicao_data}")
 
-                export_to_pdf (composicao_data)
-                messages.success (request, "Composição salva com sucesso!")
-                logger.debug ("Redirecionando para composicoes_cadastradas")
-                return redirect ('composicoes_cadastradas')
+                if 'save_and_export' in request.POST:
+                    return export_to_pdf(composicao_data)
+                else:
+                    messages.success(request, "Composição salva com sucesso!")
+                    logger.debug("Redirecionando para composicoes_cadastradas")
+                    return redirect('composicoes_cadastradas')
             except Exception as e:
-                logger.error (f"Erro ao salvar ou exportar: {str (e)}")
-                messages.error (request, f"Erro ao salvar a composição: {str (e)}")
+                logger.error(f"Erro ao salvar ou exportar: {str(e)}")
+                messages.error(request, f"Erro ao salvar a composição: {str(e)}")
+                return render(request, 'composition_form.html', {
+                    'form': form,
+                    'formset': formset,
+                    'insumos_json': json.dumps(insumos_data)
+                })
         else:
-            logger.debug ("Formulário inválido")
-            logger.debug (f"Erros do form: {form.errors}")
-            logger.debug (f"Erros do formset: {formset.errors}")
-            messages.error (request, "Erro ao validar o formulário. Verifique os campos.")
+            logger.debug("Formulário inválido")
+            logger.debug(f"Erros do form: {form.errors}")
+            logger.debug(f"Erros do formset: {formset.errors}")
+            messages.error(request, "Erro ao validar o formulário. Verifique os campos.")
 
-    return render (request, 'composition_form.html', {
+    return render(request, 'composition_form.html', {
         'form': form,
         'formset': formset,
-        'insumos_json': json.dumps (insumos_data)
+        'insumos_json': json.dumps(insumos_data)
     })
 
 
@@ -277,159 +284,70 @@ def composicoes_cadastradas_view(request):
 
 @login_required
 def pesquisar_composicoes_view(request):
-    logger.debug (f"Requisição recebida: {request.method}")
+    logger.debug(f"Requisição recebida: {request.method}")
 
     if request.method == "GET":
-        query = request.GET.get ('q', '')
-        composicoes = Composicao.objects.filter (
-            Q (codigo__icontains=query) |
-            Q (descricao__icontains=query) |
-            Q (numero__icontains=query)
-        ) if query else Composicao.objects.all ()
-        logger.debug (f"Composições encontradas: {composicoes.count ()}")
-        return render (request, 'pesquisar_composicoes.html', {'composicoes': composicoes, 'query': query})
+        query = request.GET.get('q', '')
+        composicoes = Composicao.objects.filter(
+            Q(codigo__icontains=query) |
+            Q(descricao__icontains=query) |
+            Q(numero__icontains=query)
+        ) if query else Composicao.objects.all()
+        logger.debug(f"Composições encontradas: {composicoes.count()}")
+        return render(request, 'pesquisar_composicoes.html', {'composicoes': composicoes, 'query': query})
 
     if request.method == "POST":
-        logger.debug (f"Dados do POST: {dict (request.POST)}")
+        logger.debug(f"Dados do POST: {dict(request.POST)}")
         if 'export_pdf' in request.POST:
-            logger.debug ("Botão 'Exportar para PDF' detectado!")
-            selected_ids = request.POST.getlist ('selected')
-            logger.debug (f"IDs selecionados: {selected_ids}")
-
+            logger.debug("Botão 'Exportar para PDF' detectado!")
+            selected_ids = request.POST.getlist('selected')
+            logger.debug(f"IDs selecionados: {selected_ids}")
             if not selected_ids:
-                messages.error (request, "Nenhuma composição selecionada!")
-                logger.debug ("Nenhuma composição selecionada.")
-                return redirect ('pesquisar_composicoes')
+                messages.error(request, "Nenhuma composição selecionada!")
+                logger.debug("Nenhuma composição selecionada.")
+                return redirect('pesquisar_composicoes')
 
-            try:
-                composicoes_selecionadas = Composicao.objects.filter (
-                    id__in=selected_ids
-                ).prefetch_related ('composicaoinsumo_set')
-                logger.debug (f"Composições selecionadas: {list (composicoes_selecionadas.values ('id', 'codigo'))}")
+            selected_composicoes = Composicao.objects.filter(id__in=selected_ids)
+            logger.debug(f"Composições selecionadas: {list(selected_composicoes.values('id', 'codigo'))}")
 
-                # Gerar PDF
-                buffer = BytesIO ()
-                doc = SimpleDocTemplate (
-                    buffer,
-                    pagesize=letter,
-                    leftMargin=0.5 * inch,
-                    rightMargin=0.5 * inch,
-                    topMargin=0.5 * inch,
-                    bottomMargin=0.5 * inch
-                )
-                elementos = []
-
-                estilos = getSampleStyleSheet ()
-                estilo_titulo = ParagraphStyle (
-                    'Titulo',
-                    parent=estilos['Heading1'],
-                    fontSize=16,
-                    textColor=colors.darkblue,
-                    alignment=1
-                )
-                estilo_normal = estilos['Normal']
-                estilo_normal.fontSize = 10
-
-                # Adicionar cabeçalho
-                caminho_logo = finders.find ('images/emop_branco_g1.png')
-                if caminho_logo:
-                    logger.debug (f"Logo encontrado: {caminho_logo}")
-                    logo = Image (caminho_logo, width=2 * inch, height=1 * inch)
-                    logo.hAlign = 'CENTER'
-                    elementos.append (logo)
-                else:
-                    logger.warning ("Logo não encontrado nos arquivos estáticos")
-
-                elementos.append (Paragraph ("COORDENADORIA DE PREÇOS - COPRE", estilo_titulo))
-                elementos.append (Paragraph ("DEPARTAMENTO DE APROPRIAÇÃO DE PREÇOS - DEPRE", estilo_normal))
-                elementos.append (Spacer (1, 0.25 * inch))
-
-                # Adicionar cada composição
-                for composicao in composicoes_selecionadas:
-                    # Dados principais
-                    dados_principais = [
-                        f"<b>Solicitante:</b> {composicao.solicitante or ''}",
-                        f"<b>Autor:</b> {composicao.autor or ''}",
-                        f"<b>Unidade:</b> {composicao.unidade or ''}",
-                        f"<b>Data:</b> {composicao.data.strftime ('%d/%m/%Y') if composicao.data else ''}",
-                        f"<b>Código:</b> {composicao.codigo or ''}",
-                        f"<b>Número:</b> {composicao.numero or ''}",
-                        f"<b>Obra:</b> {composicao.obra or ''}",
-                        f"<b>Descrição:</b> {composicao.descricao or ''}",
-                        f"<b>IO:</b> {composicao.io or ''}"
+            composicoes_data = [
+                {
+                    'solicitante': composicao.solicitante or '',
+                    'autor': composicao.autor or '',
+                    'unidade': composicao.unidade or '',
+                    'data': composicao.data.strftime('%d/%m/%Y') if composicao.data else '',
+                    'codigo': composicao.codigo or '',
+                    'numero': composicao.numero or '',
+                    'obra': composicao.obra or '',
+                    'descricao': composicao.descricao or '',
+                    'io': composicao.io or '',
+                    'valor_total': f"{composicao.valor_total:.2f}" if composicao.valor_total else '0.00',
+                    'insumos': [
+                        {
+                            'insumo': ci.insumo.insumo if ci.insumo else '',
+                            'codigo': ci.codigo or '',
+                            'un': ci.un or '',
+                            'quantidade': str(ci.quantidade) if ci.quantidade is not None else '0',
+                            'data_custo': ci.data_custo.strftime('%d/%m/%Y') if ci.data_custo else '',
+                            'valor': str(ci.valor) if ci.valor is not None else '0.00'
+                        } for ci in composicao.composicaoinsumo_set.all()
                     ]
-                    for dado in dados_principais:
-                        elementos.append (Paragraph (dado, estilo_normal))
-                    elementos.append (Spacer (1, 0.15 * inch))
-
-                    # Tabela de insumos
-                    estilo_tabela = ParagraphStyle (
-                        'TextoTable',
-                        parent=estilo_normal,
-                        fontSize=8,
-                        leading=10
-                    )
-                    dados_insumos = [['Insumo', 'Código', 'UN', 'Quantidade', 'Data Custo', 'Valor']]
-
-                    for ci in composicao.composicaoinsumo_set.all ():
-                        dados_insumos.append ([
-                            Paragraph (ci.insumo.insumo if ci.insumo else '', estilo_tabela),
-                            ci.codigo or '',
-                            ci.un or '',
-                            f"{ci.quantidade:.2f}" if ci.quantidade else '0.00',
-                            ci.data_custo.strftime ('%d/%m/%Y') if ci.data_custo else '',
-                            f"R$ {ci.valor:.2f}" if ci.valor else 'R$ 0.00'
-                        ])
-
-                    if len (dados_insumos) > 1:
-                        tabela = Table (
-                            dados_insumos,
-                            colWidths=[2.5 * inch, 1 * inch, 0.5 * inch, 0.8 * inch, 1 * inch, 0.8 * inch]
-                        )
-                        tabela.setStyle (TableStyle ([
-                            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                            ('FONTSIZE', (0, 0), (-1, 0), 10),
-                            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                            ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
-                            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-                            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-                            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                            ('FONTSIZE', (0, 1), (-1, -1), 8),
-                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                        ]))
-                        elementos.append (Paragraph ("<b>Insumos</b>", estilo_normal))
-                        elementos.append (Spacer (1, 0.1 * inch))
-                        elementos.append (tabela)
-                    else:
-                        elementos.append (Paragraph ("Nenhum insumo registrado.", estilo_normal))
-
-                    valor_total = composicao.valor_total if composicao.valor_total else Decimal ('0.00')
-                    elementos.append (Paragraph (f"<b>Valor Total:</b> R$ {valor_total:.2f}", estilo_normal))
-                    elementos.append (Spacer (1, 0.5 * inch))
-
-                # Construir PDF
-                doc.build (elementos)
-                buffer.seek (0)
-                response = HttpResponse (buffer.getvalue (), content_type='application/pdf')
-                response['Content-Disposition'] = 'attachment; filename="composicoes_selecionadas.pdf"'
-                buffer.close ()
-                logger.debug ("PDF gerado com sucesso!")
+                } for composicao in selected_composicoes
+            ]
+            try:
+                response = export_to_pdf(composicoes_data)
                 return response
-
             except Exception as e:
-                logger.error (f"Erro ao gerar PDF: {str (e)}", exc_info=True)
-                messages.error (request, f"Erro ao gerar PDF: {str (e)}")
-                return redirect ('pesquisar_composicoes')
+                logger.error(f"Erro ao gerar PDF: {str(e)}")
+                messages.error(request, f"Erro ao gerar PDF: {str(e)}")
+                return redirect('pesquisar_composicoes')
 
-        messages.error (request, "Ação inválida.")
-        return redirect ('pesquisar_composicoes')
+        logger.debug("POST recebido, mas 'export_pdf' não encontrado.")
+        messages.error(request, "Ação inválida.")
+        return redirect('pesquisar_composicoes')
 
-    return render (request, 'pesquisar_composicoes.html', {'composicoes': [], 'query': ''})
+    logger.debug("Método não suportado.")
+    return render(request, 'pesquisar_composicoes.html', {'composicoes': [], 'query': ''})
 
 
 @login_required

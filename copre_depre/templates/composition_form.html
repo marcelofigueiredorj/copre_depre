@@ -1,4 +1,4 @@
-<!-- copre_depre/templates/composition.html -->
+<!-- copre_depre/templates/composition_form.html -->
 {% extends "base.html" %}
 {% load static %}
 {% load form_tags %}
@@ -100,7 +100,10 @@
             <button type="button" id="add-insumo-btn" class="btn btn-success">
                 <i class="bi bi-plus-lg"></i> Adicionar Insumo
             </button>
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" name="save" class="btn btn-primary">
+                <i class="bi bi-save"></i> Salvar
+            </button>
+            <button type="submit" name="save_and_export" class="btn btn-success">
                 <i class="bi bi-save"></i> Salvar e Exportar
             </button>
             <a href="{% url 'main' %}" class="btn btn-secondary">
@@ -111,10 +114,8 @@
 </div>
 
 <script>
-    // Dados dos insumos passados do backend
     const insumos = {{ insumos_json|safe }};
 
-    // Função para preencher os campos com base no insumo selecionado
     function autoFillInsumo(selectElement) {
         const row = selectElement.closest('tr');
         const insumoId = selectElement.value;
@@ -128,7 +129,6 @@
         updateValorTotal();
     }
 
-    // Função para calcular o valor total dinamicamente
     function updateValorTotal() {
         let total = 0;
         document.querySelectorAll('#insumos-tbody tr').forEach(row => {
@@ -139,20 +139,17 @@
         document.querySelector('#id_valor_total').value = total.toFixed(2);
     }
 
-    // Função para adicionar uma nova linha de insumo
     function addInsumoRow() {
         const tbody = document.getElementById('insumos-tbody');
         const rowCount = tbody.querySelectorAll('tr').length;
         const templateRow = tbody.querySelector('tr:first-child').cloneNode(true);
 
-        // Limpa os valores da nova linha
         templateRow.querySelectorAll('input').forEach(input => {
             if (input.type === 'checkbox') input.checked = false;
             else input.value = '';
         });
         templateRow.querySelector('select[name$="-insumo"]').selectedIndex = 0;
 
-        // Ajusta os nomes e IDs dos campos para o novo índice
         templateRow.querySelectorAll('[name]').forEach(element => {
             const oldName = element.name;
             const newName = oldName.replace(/-\d+-/, `-${rowCount}-`);
@@ -162,14 +159,12 @@
 
         tbody.appendChild(templateRow);
 
-        // Atualiza TOTAL_FORMS
         const totalForms = document.querySelector('#id_composicaoinsumo_set-TOTAL_FORMS');
         totalForms.value = rowCount + 1;
 
         updateValorTotal();
     }
 
-    // Delegação de eventos para selects e inputs
     document.getElementById('insumos-tbody').addEventListener('change', function(event) {
         if (event.target.matches('select[name$="-insumo"]')) {
             autoFillInsumo(event.target);
@@ -182,10 +177,8 @@
         }
     });
 
-    // Evento para adicionar insumo
     document.getElementById('add-insumo-btn').addEventListener('click', addInsumoRow);
 
-    // Inicialização
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('select[name$="-insumo"]').forEach(select => {
             if (select.value) autoFillInsumo(select);

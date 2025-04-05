@@ -1,150 +1,175 @@
 # copre_depre/utils.py
-from reportlab.lib.pagesizes import letter
+from io import BytesIO
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, PageBreak
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
+from reportlab.lib.enums import TA_CENTER
 import os
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger (__name__)
+
 
 def export_to_pdf(composicoes_data):
-    pdf_file = "composicoes_selecionadas.pdf"  # Nome fixo para múltiplas composições
-    logger.debug(f"Gerando PDF: {pdf_file}")
+    logger.debug ("Gerando PDF em memória")
+    buffer = BytesIO ()
 
-    try:
-        doc = SimpleDocTemplate(
-            pdf_file,
-            pagesize=letter,
-            leftMargin=0.5 * inch,
-            rightMargin=0.5 * inch,
-            topMargin=0.5 * inch,
-            bottomMargin=0.5 * inch
-        )
-        elements = []
+    # Configuração do documento
+    doc = SimpleDocTemplate (
+        buffer,
+        pagesize=letter,
+        leftMargin=0.5 * inch,
+        rightMargin=0.5 * inch,
+        topMargin=0.1 * inch,
+        bottomMargin=1 * inch
+    )
 
-        styles = getSampleStyleSheet()
-        title_style = ParagraphStyle(
-            'Title',
-            parent=styles['Heading1'],
-            fontSize=16,
-            textColor=colors.darkblue,
-            alignment=1
-        )
-        subtitle_style = ParagraphStyle(
-            'Subtitle',
-            parent=styles['Normal'],
-            fontSize=12,
-            textColor=colors.grey,
-            alignment=1
-        )
-        normal_style = styles['Normal']
-        normal_style.fontSize = 10
-        table_style = ParagraphStyle(
-            'TableText',
-            parent=styles['Normal'],
-            fontSize=8,
-            leading=10  # Espaçamento entre linhas
-        )
+    elements = []
+    styles = getSampleStyleSheet ()
 
-        # Logo (adicionado apenas uma vez no início)
-        logo_path = os.path.join('copre_depre', 'static', 'images', 'emop_branco_g1.png')
-        if os.path.exists(logo_path):
-            logger.debug(f"Logo encontrado em {logo_path}")
-            logo = Image(logo_path, width=2 * inch, height=1 * inch)
-            logo.hAlign = 'CENTER'
-            elements.append(logo)
-        else:
-            logger.warning(f"Logo não encontrado em {logo_path}")
+    # ========= CABEÇALHO =========
+    logo_path = os.path.join ('copre_depre', 'static', 'images', 'emop_branco_g1.png')
+    if os.path.exists (logo_path):
+        logo = Image (logo_path, width=1.8 * inch, height=0.8 * inch)
+        logo.hAlign = 'CENTER'
+        elements.append (logo)
+        elements.append (Spacer (1, 0.1 * inch))  # Espaço após logo reduzido
+    else:
+        logger.warning (f"Logo não encontrado em {logo_path}")
 
-        elements.append(Paragraph("CORDENADORIA DE PREÇOS - COPRE", title_style))
-        elements.append(Paragraph("DEPARTAMENTO DE APROPRIAÇÃO DE PREÇOS - DEPRE", subtitle_style))
-        elements.append(Spacer(1, 0.25 * inch))
+    title_style = ParagraphStyle (
+        'Title',
+        parent=styles['Heading1'],
+        fontSize=14,
+        textColor=colors.darkblue,
+        alignment=TA_CENTER,
+        spaceAfter=2 # Espaçamento após o título reduzido
+    )
 
-        # Iterar sobre cada composição na lista
-        for i, composicao_data in enumerate(composicoes_data):
-            # Dados principais da composição
-            dados_principais = [
-                f"<b>Solicitante:</b> {composicao_data.get('solicitante', '')}",
-                f"<b>Autor:</b> {composicao_data.get('autor', '')}",
-                f"<b>Unidade:</b> {composicao_data.get('unidade', '')}",
-                f"<b>Data:</b> {composicao_data.get('data', '')}",
-                f"<b>Código:</b> {composicao_data.get('codigo', '')}",
-                f"<b>Número:</b> {composicao_data.get('numero', '')}",
-                f"<b>Obra:</b> {composicao_data.get('obra', '')}",
-                f"<b>Descrição:</b> {composicao_data.get('descricao', '')}",
-                f"<b>IO:</b> {composicao_data.get('io', '')}"
+    subtitle_style = ParagraphStyle (
+        'Subtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.grey,
+        alignment=TA_CENTER,
+        spaceAfter=2 # Espaçamento após o título reduzido
+    )
+
+    elements.append (Paragraph ("CORDENADORIA DE PREÇOS - COPRE", title_style))
+    elements.append (Paragraph ("DEPARTAMENTO DE APROPRIAÇÃO DE PREÇOS - DEPRE", subtitle_style))
+    elements.append (Spacer (1, 0.05 * inch))  # Espaçamento reduzido de 0.25 para 0.1 polegadas
+
+    # ========= CONTEÚDO PRINCIPAL =========
+    if isinstance (composicoes_data, dict):
+        composicoes = [composicoes_data]
+    else:
+        composicoes = composicoes_data
+
+    for i, composicao in enumerate (composicoes):
+        # DETALHES DA COMPOSIÇÃO
+        details = [
+            f"<b>Solicitante:</b> {composicao.get ('solicitante', 'N/A')}",
+            f"<b>Autor:</b> {composicao.get ('autor', 'N/A')}",
+            f"<b>Unidade:</b> {composicao.get ('unidade', 'N/A')}",
+            f"<b>Data:</b> {composicao.get ('data', 'N/A')}",
+            f"<b>Código:</b> {composicao.get ('codigo', 'N/A')}",
+            f"<b>Número:</b> {composicao.get ('numero', 'N/A')}",
+            f"<b>Obra:</b> {composicao.get ('obra', 'N/A')}",
+            f"<b>Descrição:</b> {composicao.get ('descricao', 'N/A')}",
+            f"<b>IO:</b> {composicao.get ('io', 'N/A')}"
+        ]
+
+        for detail in details:
+            elements.append (Paragraph (detail, styles['Normal']))
+
+        elements.append (Spacer (1, 0.2 * inch))
+
+        # TABELA DE INSUMOS
+        insumos_data = [
+            [
+                Paragraph ('<b>Insumo</b>', ParagraphStyle ('Header', fontSize=9, fontName='Helvetica-Bold')),
+                Paragraph ('<b>Código</b>', ParagraphStyle ('Header', fontSize=9, fontName='Helvetica-Bold')),
+                Paragraph ('<b>UN</b>', ParagraphStyle ('Header', fontSize=9, fontName='Helvetica-Bold')),
+                Paragraph ('<b>Quantidade</b>', ParagraphStyle ('Header', fontSize=9, fontName='Helvetica-Bold')),
+                Paragraph ('<b>Data Custo</b>', ParagraphStyle ('Header', fontSize=9, fontName='Helvetica-Bold')),
+                Paragraph ('<b>Valor Unitário</b>', ParagraphStyle ('Header', fontSize=9, fontName='Helvetica-Bold'))
             ]
-            for dado in dados_principais:
-                elements.append(Paragraph(dado, normal_style))
-            elements.append(Spacer(1, 0.25 * inch))
+        ]
 
-            # Tabela de insumos (se houver)
-            insumos = composicao_data.get('insumos', [])
-            if not insumos and 'id' in composicao_data:
-                # Se não houver insumos no dicionário, buscar do banco
-                from .models import ComposicaoInsumo  # Importar aqui para evitar circular import
-                composicao_id = composicao_data['id']
-                insumos = ComposicaoInsumo.objects.filter(composicao_id=composicao_id)
-                insumos = [
-                    {
-                        'insumo': ci.insumo.insumo if ci.insumo else '',
-                        'codigo': ci.codigo or '',
-                        'un': ci.un or '',
-                        'quantidade': str(ci.quantidade) if ci.quantidade is not None else '0',
-                        'data_custo': ci.data_custo.strftime('%d/%m/%Y') if ci.data_custo else '',
-                        'valor': str(ci.valor) if ci.valor is not None else '0.00'
-                    } for ci in insumos
-                ]
+        # Estilo para células de dados
+        cell_style = ParagraphStyle(
+            'CellStyle',
+            fontName='Helvetica',
+            fontSize=8,
+            leading=9,
+            wordWrap='LTR'
+        )
 
-            insumos_data = [['Insumo', 'Código', 'UN', 'Quantidade', 'Data Custo', 'Valor']]
-            for insumo in insumos:
-                insumos_data.append([
-                    Paragraph(insumo.get('insumo', ''), table_style),
-                    insumo.get('codigo', ''),
-                    insumo.get('un', ''),
-                    insumo.get('quantidade', ''),
-                    insumo.get('data_custo', ''),
-                    insumo.get('valor', '')
-                ])
+        for insumo in composicao['insumos']:
+            insumos_data.append([
+                Paragraph(insumo.get('insumo', 'N/A'), cell_style),
+                Paragraph(insumo.get('codigo', 'N/A'), cell_style),
+                Paragraph(insumo.get('un', 'N/A'), cell_style),
+                Paragraph(f"{float(insumo.get('quantidade', 0)):.2f}", cell_style),
+                Paragraph(insumo.get('data_custo', 'N/A'), cell_style),
+                Paragraph(f"R$ {float(insumo.get('valor', 0)):.2f}", cell_style)
+            ])
 
-            if len(insumos_data) > 1:
-                logger.debug(f"Insumos para tabela: {insumos_data}")
-                table = Table(insumos_data, colWidths=[2.5 * inch, 1 * inch, 0.5 * inch, 0.8 * inch, 1 * inch, 0.8 * inch])
-                table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 10),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                    ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
-                    ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 8),
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                    ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                    ('WORDWRAP', (0, 1), (0, -1), 'CJK'),
-                ]))
-                elements.append(Paragraph("<b>Insumos</b>", normal_style))
-                elements.append(Spacer(1, 0.1 * inch))
-                elements.append(table)
-            else:
-                elements.append(Paragraph("Nenhum insumo registrado.", normal_style))
-            elements.append(Spacer(1, 0.25 * inch))
+        table = Table(
+            insumos_data,
+            colWidths=[3.2*inch, 0.9*inch, 0.6*inch, 1.0*inch, 1.0*inch, 1.2*inch],  # Largura aumentada
+            repeatRows=1
+        )
 
-            elements.append(Paragraph(f"<b>Valor Total:</b> R$ {composicao_data.get('valor_total', '0.00')}", normal_style))
+        table.setStyle(TableStyle([
+            # ... (configurações de cor e alinhamento)
+            ('GRID', (0,0), (-1,-1), 0.8, colors.HexColor('#444')),  # Linhas mais escuras
+            ('LINEBELOW', (0,0), (-1,0), 1.2, colors.HexColor('#222')),  # Linha header reforçada
+            ('VALIGN', (0,0), (-1,-1), 'TOP')
+        ]))
 
-            # Adicionar quebra de página entre composições (exceto a última)
-            if i < len(composicoes_data) - 1:
-                elements.append(PageBreak())
+        elements.append(table)
+        elements.append (Spacer (1, 0.3 * inch))
+        elements.append (Paragraph (
+            f"<b>Valor Total:</b> R$ {float (composicao.get ('valor_total', 0)):.2f}",
+            ParagraphStyle ('Total', fontSize=10, textColor=colors.HexColor ('#2c3e50'))
+        ))
 
-        doc.build(elements)
-        logger.debug(f"PDF gerado com sucesso: {pdf_file}")
-        return pdf_file  # Retornar o caminho do arquivo para uso posterior
+        if i < len (composicoes) - 1:
+            elements.append (PageBreak ())
+
+    # ========= RODAPÉ =========
+    def add_footer(canvas, doc):
+        canvas.saveState ()
+        footer_text = (
+            "Campo de São Cristóvão, 138 São Cristóvão, Rio de Janeiro | "
+            "CEP: 20921-904 | Telefone: (21) 2222-2222 | "
+            "SECRETARIA DE INFRAESTRUTURA E OBRAS PÚBLICAS"
+        )
+        footer_style = ParagraphStyle (
+            'FooterStyle',
+            fontSize=8,
+            leading=10,
+            alignment=TA_CENTER,
+            textColor=colors.grey
+        )
+        footer = Paragraph (footer_text, footer_style)
+        footer.wrap (doc.width, 0.5 * inch)
+        footer.drawOn (canvas, doc.leftMargin, 0.4 * inch)
+        canvas.restoreState ()
+
+    # ========= GERAR PDF =========
+    try:
+        doc.build (elements, onFirstPage=add_footer, onLaterPages=add_footer)
+        buffer.seek (0)
+        response = HttpResponse (buffer.getvalue (), content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="composicoes.pdf"'
+        buffer.close ()
+        logger.debug ("PDF gerado com sucesso")
+        return response
     except Exception as e:
-        logger.error(f"Erro ao gerar PDF: {str(e)}")
+        logger.error (f"Erro ao gerar PDF: {str (e)}")
         raise

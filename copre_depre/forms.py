@@ -1,7 +1,7 @@
 # copre_depre/forms.py
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Composicao, Insumo, ComposicaoInsumo  # Removido User daqui
+from .models import Composicao, Insumo, ComposicaoInsumo
 from django.core.exceptions import ValidationError
 import datetime
 
@@ -9,7 +9,7 @@ class LoginForm(forms.Form):
     username = forms.CharField(max_length=100)
     password = forms.CharField(widget=forms.PasswordInput)
 
-class RegisterForm(forms.Form):  # Alterado de ModelForm para Form simples
+class RegisterForm(forms.Form):
     username = forms.CharField(max_length=100)
     password = forms.CharField(widget=forms.PasswordInput)
     confirm_password = forms.CharField(widget=forms.PasswordInput)
@@ -36,27 +36,41 @@ def is_valid_date(date_str):
         return False
 
 class ComposicaoForm(forms.ModelForm):
+    data = forms.CharField(
+        widget=forms.TextInput(attrs={'placeholder': 'DD/MM/AAAA'}),
+        required=False
+    )
+    io = forms.CharField(  # Novo campo adicionado
+        widget=forms.TextInput(attrs={'placeholder': 'DD/MM/AAAA'}),
+        required=False
+    )
+
     class Meta:
         model = Composicao
         fields = ['solicitante', 'autor', 'unidade', 'data', 'codigo', 'numero', 'obra', 'descricao', 'io', 'valor_total']
         widgets = {
-            'data': forms.TextInput(attrs={'placeholder': 'DD/MM/AAAA'}),
             'numero': forms.TextInput(attrs={'placeholder': 'XX.XXX.XXX-XX'}),
             'descricao': forms.Textarea(attrs={'rows': 4}),
             'valor_total': forms.NumberInput(attrs={'readonly': 'readonly'}),
         }
 
     def clean_data(self):
-        data = self.cleaned_data['data']
-        if not is_valid_date(data):
+        data_str = self.cleaned_data['data']
+        if not data_str:
+            return None
+        if not is_valid_date(data_str):
             raise ValidationError("Data inválida (DD/MM/AAAA)")
-        return data
+        day, month, year = map(int, data_str.split('/'))
+        return datetime.date(year, month, day)
 
-    def clean_io(self):
-        io = self.cleaned_data['io']
-        if not is_valid_date(io):
+    def clean_io(self):  # Novo método para validar 'io'
+        io_str = self.cleaned_data['io']
+        if not io_str:
+            return None
+        if not is_valid_date(io_str):
             raise ValidationError("IO inválida (DD/MM/AAAA)")
-        return io
+        day, month, year = map(int, io_str.split('/'))
+        return datetime.date(year, month, day)
 
 class ComposicaoInsumoForm(forms.ModelForm):
     class Meta:
