@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 SECRET_KEY = 'django-insecure-your-secret-key-here'  # Substitua por uma chave segura em produção
 DEBUG = True
-ALLOWED_HOSTS = ['https://copre-depre.onrender.com', 'localhost', '127.0.0.1',]
+ALLOWED_HOSTS = ['copre-depre.onrender.com', 'localhost', '127.0.0.1',]
 
 # Application definition
 INSTALLED_APPS = [
