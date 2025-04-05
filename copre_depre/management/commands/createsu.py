@@ -1,5 +1,3 @@
-# copre_depre/management/commands/createsu.py
-
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 import os
@@ -8,40 +6,28 @@ class Command(BaseCommand):
     help = "Cria um superusuário automaticamente a partir de variáveis de ambiente"
 
     def handle(self, *args, **options):
-        if os.environ.get("CREATE_SUPERUSER", "").lower() != "true":
-            self.stdout.write("Variável CREATE_SUPERUSER não é 'true'. Pulando criação do superusuário.")
+        print("DEBUG VARIÁVEIS:")
+        username = os.environ.get("admin", "").strip()
+        email = os.environ.get("marcelotachsg@gmail.com", "").strip()
+        password = os.environ.get("filipe98", "").strip()
+        create = os.environ.get("CREATE_SUPERUSER", "").strip().lower()
+
+        print("USERNAME:", username)
+        print("EMAIL:", email)
+        print("PASSWORD:", "*" * len(password))  # não mostra a senha nos logs
+
+        if create != "true":
+            self.stdout.write("CREATE_SUPERUSER não é 'true'. Pulando criação.")
             return
 
-        username = os.environ.get("admin")
-        email = os.environ.get("marcelotechsg@gmail.com")
-        password = os.environ.get("filipe98")
-
         if not username or not email or not password:
-            self.stderr.write("Variáveis de ambiente incompletas. Abortando.")
+            self.stderr.write("❌ Variáveis de ambiente incompletas. Abortando.")
             return
 
         User = get_user_model()
 
         if User.objects.filter(username=username).exists():
-            self.stdout.write(f"Usuário '{username}' já existe. Nenhuma ação tomada.")
+            self.stdout.write(f"✅ Superusuário '{username}' já existe. Nenhuma ação tomada.")
         else:
             User.objects.create_superuser(username=username, email=email, password=password)
-            self.stdout.write(f"Superusuário '{username}' criado com sucesso.")
-
-    def handle(self, *args, **options):
-        print ("DEBUG VARIÁVEIS:")
-        print ("USERNAME:", os.environ.get ("DJANGO_SUPERUSER_USERNAME"))
-        print ("EMAIL:", os.environ.get ("DJANGO_SUPERUSER_EMAIL"))
-        print ("PASSWORD:", os.environ.get ("DJANGO_SUPERUSER_PASSWORD"))
-
-        if os.environ.get ("CREATE_SUPERUSER", "").lower () != "true":
-            self.stdout.write ("CREATE_SUPERUSER não é 'true'. Pulando criação do superusuário.")
-            return
-
-        username = os.environ.get ("DJANGO_SUPERUSER_USERNAME")
-        email = os.environ.get ("DJANGO_SUPERUSER_EMAIL")
-        password = os.environ.get ("DJANGO_SUPERUSER_PASSWORD")
-
-        if not username or not email or not password:
-            self.stderr.write ("Variáveis de ambiente incompletas. Abortando.")
-            return
+            self.stdout.write(f"✅ Superusuário '{username}' criado com sucesso.")
